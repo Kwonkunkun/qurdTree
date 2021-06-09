@@ -47,16 +47,16 @@ class QuardTree {
   }
 
   insert(point) {
-    if (this.boundary.contains(point)) {
+    if (!this.boundary.contains(point)) {
       return;
     }
 
     if (this.points.length < this.capacity) {
       this.points.push(point);
     } else {
-      if (!this.divded) {
+      if (!this.divided) {
         this.subdivide();
-        this.divded = true;
+        this.divided = true;
       }
       this.northeast.insert(point);
       this.northwest.insert(point);
