@@ -14,10 +14,18 @@ class Rectangle {
   }
   contains(point) {
     return (
-      point.x > this.x - this.w &&
-      point.x < this.x + this.w &&
-      point.y > this.y - this.h &&
-      point.y < this.y + this.h
+      point.x >= this.x - this.w &&
+      point.x <= this.x + this.w &&
+      point.y >= this.y - this.h &&
+      point.y <= this.y + this.h
+    );
+  }
+  intersects(range) {
+    return !(
+      range.x - range.w > this.x + this.w ||
+      range.x + this.w < this.x - this.w ||
+      range.y - range.h > this.y + this.h ||
+      range.y + this.h < this.y - this.h
     );
   }
 }
@@ -39,10 +47,10 @@ class QuardTree {
     let nw = new Rectangle(x - w / 2, y - h / 2, w / 2, h / 2);
     let se = new Rectangle(x + w / 2, y + h / 2, w / 2, h / 2);
     let sw = new Rectangle(x - w / 2, y + h / 2, w / 2, h / 2);
-    this.northeast = new QuardTree(ne);
-    this.northwest = new QuardTree(nw);
-    this.southeast = new QuardTree(se);
-    this.southwest = new QuardTree(sw);
+    this.northeast = new QuardTree(ne, this.capacity);
+    this.northwest = new QuardTree(nw, this.capacity);
+    this.southeast = new QuardTree(se, this.capacity);
+    this.southwest = new QuardTree(sw, this.capacity);
     this.divided = true;
   }
 
@@ -53,15 +61,75 @@ class QuardTree {
 
     if (this.points.length < this.capacity) {
       this.points.push(point);
+      return true;
     } else {
       if (!this.divided) {
         this.subdivide();
         this.divided = true;
       }
-      this.northeast.insert(point);
-      this.northwest.insert(point);
-      this.southeast.insert(point);
-      this.southwest.insert(point);
+
+      if (this.northeast.insert(point)) {
+        return true;
+      } else if (this.northwest.insert(point)) {
+        return true;
+      } else if (this.southeast.insert(point)) {
+        return true;
+      } else if (this.southwest.insert(point)) {
+        return true;
+      }
     }
+  }
+
+  query(range, arr) {
+    if (!arr) {
+      found = [];
+    }
+
+    let found = [];
+
+    if (!this.boundary.intersects(range)) {
+      //empty array
+      return;
+    } else {
+      for (let p of this.points) {
+        if (range.contains(p)) {
+          found.push(p);
+        }
+      }
+
+      if (this.divided) {
+        this.northwest.query(range);
+        found = found.concat(this.northeast.query(range));
+        found = found.concat(this.southwest.query(range));
+        found = found.concat(this.southeast.query(range));
+      }
+
+      return found;
+    }
+  }
+
+  show() {
+    stroke(255);
+    strokeWeight(1);
+    noFill();
+    rectMode(CENTER);
+    rect(
+      this.boundary.x,
+      this.boundary.y,
+      this.boundary.w * 2,
+      this.boundary.h * 2
+    );
+
+    if (this.divided) {
+      this.northeast.show();
+      this.northwest.show();
+      this.southeast.show();
+      this.southwest.show();
+    }
+
+    // for (let p of this.points) {
+    //   strokeWeight(4);
+    //   point(p.x, p.y);
+    // }
   }
 }
