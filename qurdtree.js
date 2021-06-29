@@ -23,9 +23,9 @@ class Rectangle {
   intersects(range) {
     return !(
       range.x - range.w > this.x + this.w ||
-      range.x + this.w < this.x - this.w ||
+      range.x + range.w < this.x - this.w ||
       range.y - range.h > this.y + this.h ||
-      range.y + this.h < this.y - this.h
+      range.y + range.h < this.y - this.h
     );
   }
 }
@@ -80,13 +80,10 @@ class QuardTree {
     }
   }
 
-  query(range, arr) {
-    if (!arr) {
+  query(range, found) {
+    if (!found) {
       found = [];
     }
-
-    let found = [];
-
     if (!this.boundary.intersects(range)) {
       //empty array
       return;
@@ -98,14 +95,13 @@ class QuardTree {
       }
 
       if (this.divided) {
-        this.northwest.query(range);
-        found = found.concat(this.northeast.query(range));
-        found = found.concat(this.southwest.query(range));
-        found = found.concat(this.southeast.query(range));
+        this.northwest.query(range, found);
+        this.northeast.query(range, found);
+        this.southwest.query(range, found);
+        this.southeast.query(range, found);
       }
-
-      return found;
     }
+    return found;
   }
 
   show() {
